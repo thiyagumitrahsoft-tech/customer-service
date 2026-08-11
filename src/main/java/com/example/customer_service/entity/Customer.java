@@ -42,7 +42,7 @@ public class Customer {
 
     @PrePersist
     public void prePersist(){
-        ZoneId indiaZone = ZoneId.of("IST");
+        ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
         LocalDateTime now= LocalDateTime.now(indiaZone);
 
         createdAt= now;
@@ -55,7 +55,7 @@ public class Customer {
 
     @PreUpdate
     public void preUpdate(){
-        ZoneId indiaZone = ZoneId.of("IST");
+        ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
         updatedAt = LocalDateTime.now(indiaZone);
     }
 

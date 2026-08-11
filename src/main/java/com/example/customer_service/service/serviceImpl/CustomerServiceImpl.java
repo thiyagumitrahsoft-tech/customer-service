@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +61,19 @@ public class CustomerServiceImpl implements CustomerService {
                         )
                 );
 
-        modelMapper.map(request, customer);
+        if (!Objects.equals(customer.getEmail(), request.getEmail())) {
+            customerRepository.findByEmail(request.getEmail())
+                    .ifPresent(existingCustomer -> {
+                        throw new RuntimeException(
+                                "Customer already exists with email: " + request.getEmail()
+                        );
+                    });
+
+            customer.setEmail(request.getEmail());
+        }
+
+        customer.setName(request.getName());
+        customer.setPhone(request.getPhone());
 
         Customer savedCustomer =
                 customerRepository.save(customer);

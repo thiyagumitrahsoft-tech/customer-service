@@ -37,7 +37,7 @@ public class CustomerController {
                 .body(response);
     }
 
-    @GetMapping("/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<CustomerResponse> getCustomerByEmail(@PathVariable String email){
 
         CustomerResponse response=customerService.getCustomerByEmail(email);
@@ -74,8 +74,5 @@ public class CustomerController {
 
         return ResponseEntity.ok("Customer deleted successfully");
     }
-
-
-
 
 }
