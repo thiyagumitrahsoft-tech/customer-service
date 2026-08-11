@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,13 +52,50 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerResponse updateCustomer(Long id, CustomerCreateRequest request) {
-        Customer customer = modelMapper.map(request, Customer.class);
 
-        customer.setStatus("ACTIVE");
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Customer not found with id: " + id
+                        )
+                );
+
+        modelMapper.map(request, customer);
+
+        Customer savedCustomer =
+                customerRepository.save(customer);
+
+        return modelMapper.map(
+                savedCustomer,
+                CustomerResponse.class
+        );
+    }
+
+    @Override
+    public CustomerResponse updateCustomerStatus(Long id, String status) {
+
+        Customer customer= customerRepository.findById(id)
+                .orElseThrow(()->
+                        new RuntimeException(
+                                "No Customer found"
+                        ));
+        customer.setStatus(status);
 
         Customer savedCustomer = customerRepository.save(customer);
 
-        return modelMapper.map(savedCustomer, CustomerResponse.class);
+        return modelMapper.map(
+                savedCustomer,
+                CustomerResponse.class
+        );    }
+
+    @Override
+    public void deleteCustomer(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "Customer not found with id: " + id
+                ));
+
+        customerRepository.delete(customer);
     }
 
 }

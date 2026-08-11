@@ -12,4 +12,8 @@ public interface CustomerService {
     CustomerResponse getCustomerByEmail(String email);
 
     CustomerResponse updateCustomer(Long id, CustomerCreateRequest request);
+
+    CustomerResponse updateCustomerStatus(Long id, String status);
+
+    void deleteCustomer(Long id);
 }

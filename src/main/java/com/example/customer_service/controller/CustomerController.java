@@ -6,6 +6,7 @@ import com.example.customer_service.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,7 +47,7 @@ public class CustomerController {
                 .body(response);
     }
 
-    @PutMapping("/{id")
+    @PutMapping("/{id}")
     public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable Long id, @RequestBody CustomerCreateRequest request){
 
         CustomerResponse response=customerService.updateCustomer(id,request);
@@ -56,6 +57,24 @@ public class CustomerController {
                 .body(response);
 
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<CustomerResponse> updateCustomerStatus(@PathVariable Long id,@RequestParam String status) {
+
+        CustomerResponse response=customerService.updateCustomerStatus(id,status);
+
+        return ResponseEntity
+                .status(HttpStatusCode.valueOf(200))
+                .body(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCustomer(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+
+        return ResponseEntity.ok("Customer deleted successfully");
+    }
+
 
 
 
