@@ -28,13 +28,11 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponse> getCustomer(@PathVariable Long id){
+    public ResponseEntity<CustomerResponse> getCustomer(@PathVariable Long id) {
 
-        CustomerResponse response=customerService.getCustomer(id);
+        CustomerResponse response = customerService.getCustomer(id);
 
-        return ResponseEntity
-                .status(HttpStatus.FOUND)
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/email/{email}")
