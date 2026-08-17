@@ -24,7 +24,9 @@
               "    pm.collectionVariables.set(\"customerId\", response.id);",
               "}"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -38,7 +40,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"{{customerEmail}}\",\n  \"phone\": \"9876543210\"\n}",
+          "raw": "{\n  \"name\": \"shalini\",\n  \"email\": \"shalini@example.com\",\n  \"phone\": \"9876543210\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -102,7 +104,9 @@
               "    pm.response.to.have.status(302);",
               "});"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -110,13 +114,14 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/customers/{{customerEmail}}",
+          "raw": "{{baseUrl}}/api/customers/email/{{customerEmail}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "customers",
+            "email",
             "{{customerEmail}}"
           ]
         }
@@ -239,6 +244,25 @@
             "api",
             "customers",
             "{{customerId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "{{baseUrl}}/api/customers/{{customerId}}",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/instance-info",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "customers",
+            "instance-info"
           ]
         }
       },

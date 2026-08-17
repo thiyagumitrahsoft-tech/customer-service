@@ -5,10 +5,13 @@ import com.example.customer_service.dto.CustomerResponse;
 import com.example.customer_service.entity.Customer;
 import com.example.customer_service.repository.CustomerRepository;
 import com.example.customer_service.service.CustomerService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Objects;
 
 @Service
@@ -18,6 +21,12 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     private final ModelMapper modelMapper;
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    private static final String CUSTOMER_CACHE_KEY = "customer::";
 
     @Override
     public CustomerResponse createCustomer(CustomerCreateRequest request) {
@@ -37,12 +46,50 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerResponse getCustomer(Long id) {
+
+        String key = CUSTOMER_CACHE_KEY + id;
+
+        try {
+            String cachedCustomer =
+                redisTemplate.opsForValue().get(key);
+
+        if (cachedCustomer != null) {
+            return objectMapper.readValue(
+                    cachedCustomer,
+                    CustomerResponse.class
+            );
+        }
+
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Customer Not Found with id : " + id
                 ));
-        return modelMapper.map(customer, CustomerResponse.class);
-    }
+
+        CustomerResponse response =
+                modelMapper.map(
+                        customer,
+                        CustomerResponse.class
+                );
+
+        String json =
+                objectMapper.writeValueAsString(response);
+
+        redisTemplate.opsForValue().set(
+                    key,
+                    json,
+                Duration.ofMinutes(10)
+
+        );
+
+        return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Error while processing customer cache",
+                    e
+            );
+        }
+   }
 
     @Override
     public CustomerResponse getCustomerByEmail(String email) {
@@ -78,6 +125,10 @@ public class CustomerServiceImpl implements CustomerService {
         Customer savedCustomer =
                 customerRepository.save(customer);
 
+        String key = CUSTOMER_CACHE_KEY + id;
+
+        redisTemplate.delete(key);
+
         return modelMapper.map(
                 savedCustomer,
                 CustomerResponse.class
@@ -96,6 +147,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer savedCustomer = customerRepository.save(customer);
 
+        redisTemplate.delete(
+                CUSTOMER_CACHE_KEY + id
+        );
+
         return modelMapper.map(
                 savedCustomer,
                 CustomerResponse.class
@@ -107,6 +162,10 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new RuntimeException(
                         "Customer not found with id: " + id
                 ));
+
+        redisTemplate.delete(
+                CUSTOMER_CACHE_KEY + id
+        );
 
         customerRepository.delete(customer);
     }
