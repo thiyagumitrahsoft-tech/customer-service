@@ -12,7 +12,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final ObjectMapper objectMapper;
 
     private static final String CUSTOMER_CACHE_KEY = "customer::";
+
+    @Override
+    public List<CustomerResponse> getAllCustomers() {
+        List<Customer> customers = customerRepository.findAll();
+        return customers.stream()
+                .map(customer -> modelMapper.map(customer, CustomerResponse.class))
+                .collect(Collectors.toList());
+    }
 
     @Override
     public CustomerResponse createCustomer(CustomerCreateRequest request) {
