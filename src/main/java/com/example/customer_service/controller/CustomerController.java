@@ -4,9 +4,6 @@ import com.example.customer_service.dto.CustomerCreateRequest;
 import com.example.customer_service.dto.CustomerResponse;
 import com.example.customer_service.service.CustomerService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,9 +51,7 @@ public class CustomerController {
 
         CustomerResponse response=customerService.updateCustomer(id,request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.ok(response);
 
     }
 
@@ -65,9 +60,7 @@ public class CustomerController {
 
         CustomerResponse response=customerService.updateCustomerStatus(id,status);
 
-        return ResponseEntity
-                .status(HttpStatusCode.valueOf(200))
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
