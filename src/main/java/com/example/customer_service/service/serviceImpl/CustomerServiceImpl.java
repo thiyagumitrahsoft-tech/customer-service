@@ -5,13 +5,13 @@ import com.example.customer_service.dto.CustomerResponse;
 import com.example.customer_service.entity.Customer;
 import com.example.customer_service.repository.CustomerRepository;
 import com.example.customer_service.service.CustomerService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,21 +24,21 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final ModelMapper modelMapper;
 
-    private final RedisTemplate<String, String> redisTemplate;
-
-    private final ObjectMapper objectMapper;
-
-    private static final String CUSTOMER_CACHE_KEY = "customer::";
-
     @Override
+    @Cacheable(cacheNames = "customerList", key = "'all'")
     public List<CustomerResponse> getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
-        return customers.stream()
+        List<CustomerResponse> response = customers.stream()
                 .map(customer -> modelMapper.map(customer, CustomerResponse.class))
                 .collect(Collectors.toList());
+        return response;
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "customerList", allEntries = true),
+            @CacheEvict(cacheNames = "customerByEmail", allEntries = true)
+    })
     public CustomerResponse createCustomer(CustomerCreateRequest request) {
 
         if(customerRepository.existsByEmail(request.getEmail())){
@@ -49,27 +49,15 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setStatus("ACTIVE");
 
         Customer savedCustomer = customerRepository.save(customer);
+        CustomerResponse response = modelMapper.map(savedCustomer, CustomerResponse.class);
 
-        return modelMapper.map(savedCustomer, CustomerResponse.class);
+        return response;
 
     }
 
     @Override
+    @Cacheable(cacheNames = "customer", key = "#id")
     public CustomerResponse getCustomer(Long id) {
-
-        String key = CUSTOMER_CACHE_KEY + id;
-
-        try {
-            String cachedCustomer =
-                redisTemplate.opsForValue().get(key);
-
-        if (cachedCustomer != null) {
-            return objectMapper.readValue(
-                    cachedCustomer,
-                    CustomerResponse.class
-            );
-        }
-
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Customer Not Found with id : " + id
@@ -81,34 +69,24 @@ public class CustomerServiceImpl implements CustomerService {
                         CustomerResponse.class
                 );
 
-        String json =
-                objectMapper.writeValueAsString(response);
-
-        redisTemplate.opsForValue().set(
-                    key,
-                    json,
-                Duration.ofMinutes(10)
-
-        );
-
         return response;
-
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Error while processing customer cache",
-                    e
-            );
-        }
    }
 
     @Override
+    @Cacheable(cacheNames = "customerByEmail", key = "#email")
     public CustomerResponse getCustomerByEmail(String email) {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(()-> new RuntimeException("Customer Not Found with email : "+ email));
-        return modelMapper.map(customer, CustomerResponse.class);
+        CustomerResponse response = modelMapper.map(customer, CustomerResponse.class);
+        return response;
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "customer", key = "#id"),
+            @CacheEvict(cacheNames = "customerList", allEntries = true),
+            @CacheEvict(cacheNames = "customerByEmail", allEntries = true)
+    })
     public CustomerResponse updateCustomer(Long id, CustomerCreateRequest request) {
 
         Customer customer = customerRepository.findById(id)
@@ -135,17 +113,18 @@ public class CustomerServiceImpl implements CustomerService {
         Customer savedCustomer =
                 customerRepository.save(customer);
 
-        String key = CUSTOMER_CACHE_KEY + id;
-
-        redisTemplate.delete(key);
-
-        return modelMapper.map(
+        CustomerResponse response = modelMapper.map(
                 savedCustomer,
                 CustomerResponse.class
         );
+        return response;
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "customer", key = "#id"),
+            @CacheEvict(cacheNames = "customerList", allEntries = true)
+    })
     public CustomerResponse updateCustomerStatus(Long id, String status) {
 
         Customer customer= customerRepository.findById(id)
@@ -157,25 +136,24 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer savedCustomer = customerRepository.save(customer);
 
-        redisTemplate.delete(
-                CUSTOMER_CACHE_KEY + id
-        );
-
-        return modelMapper.map(
+        CustomerResponse response = modelMapper.map(
                 savedCustomer,
                 CustomerResponse.class
-        );    }
+        );
+        return response;
+    }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "customer", key = "#id"),
+            @CacheEvict(cacheNames = "customerList", allEntries = true),
+            @CacheEvict(cacheNames = "customerByEmail", allEntries = true)
+    })
     public void deleteCustomer(Long id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Customer not found with id: " + id
                 ));
-
-        redisTemplate.delete(
-                CUSTOMER_CACHE_KEY + id
-        );
 
         customerRepository.delete(customer);
     }

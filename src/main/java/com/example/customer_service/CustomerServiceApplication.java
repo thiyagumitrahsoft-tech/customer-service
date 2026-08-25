@@ -3,10 +3,14 @@ package com.example.customer_service;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.servers.Server;
+import lombok.ToString;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
+@ToString
 @SpringBootApplication
+@EnableCaching
 @OpenAPIDefinition(info = @Info(
 		title = "Customer Service API",
 		version = "v1",
